@@ -1,0 +1,60 @@
+S(p1, P(p2, S(P (S(p3, p4), p5), P(p6, p7))))
+
+
+
+cobegin
+    p1;
+    cobegin
+        p2 
+        //
+        cobegin        
+            cobegin
+                cobegin
+                    p3;
+                    p4
+                coend
+                //
+                p5
+            coend;
+            cobegin
+                p6 
+                //
+                p7
+            coend
+        coend
+    coend
+coend
+
+
+t1 := w = x1 * x2
+t2 := v = x3 * x4
+t3 := y = v * x5
+t4 := z = v * x6
+t5 := y = w * y
+t6 := z = w * z
+t7 := a = y + z
+
+cobegin
+    cobegin
+        p1
+        //
+        cobegin
+            p2;
+            cobegin
+                p3 
+                // 
+                p4
+            coend
+        coend
+    coend;
+    cobegin
+        cobegin
+            p5 
+            // 
+            p6
+        coend;
+        p7
+    coend
+coend
+
+

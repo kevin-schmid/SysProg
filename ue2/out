@@ -1,0 +1,18 @@
+--- Im Elternprozess ---
+global_var = 1 Speicheradresse : 0x560da0ea0010
+lokal_var  = 1 Speicheradresse : 0x7ffd0d21f708
+--- Im Kindprozess ---
+global_var = 1 Speicheradresse : 0x560da0ea0010
+lokal_var  = 1 Speicheradresse : 0x7ffd0d21f708
+--- Im Kindprozess ---
+global_var = 2 Speicheradresse : 0x560da0ea0010
+lokal_var  = 2 Speicheradresse : 0x7ffd0d21f708
+--- Im Elternprozess ---
+global_var = 1 Speicheradresse : 0x560da0ea0010
+lokal_var  = 1 Speicheradresse : 0x7ffd0d21f708
+--- Im Enkelkindprozess ---
+global_var = 1 Speicheradresse : 0x560da0ea0010
+lokal_var  = 1 Speicheradresse : 0x7ffd0d21f708
+--- Im Enkelkindprozess ---
+global_var = 3 Speicheradresse : 0x560da0ea0010
+lokal_var  = 3 Speicheradresse : 0x7ffd0d21f708

@@ -2,8 +2,6 @@
 #include <unistd.h>
 
 int main() {
- while(1)
-  alarm(0);
-
+ alarm("wat");
  return 0;
 }

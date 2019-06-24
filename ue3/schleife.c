@@ -10,8 +10,12 @@ int main(int argc, char **argv){
 
     if (pid > 0){
         // parent process
+        counter = counter + 10;
+        printf("Parent PPID:%d PID:%d counter:%d \n", getppid(), getpid(), counter);
     }
     else if (pid == 0){
+        counter = counter + 1;
+        printf("Child: PPID:%d PID:%d counter:%d \n", getppid(), getpid(), counter);
         // child process
     } else{
         printf("fork() failed!\n");

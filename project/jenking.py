@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 import urllib, json, sys
+from random import randint
 from threading import Thread
 from time import sleep
-# from sense_hat import SenseHat
+from sense_hat import SenseHat
 from urllib.error import URLError
 from urllib.request import urlopen
 
 boot_up = True
 building = False
 state = 'SUCCESS'
-# sense = SenseHat()
+sense = SenseHat()
 
 class Display(Thread):
-    g = '#'#(0, 255, 0) # Green
-    r = '#'#(255, 0, 0) # Red
-    y = '#'#(255, 255, 0) # Yellow
-    b = 'O'#(0, 0, 255) # Blue
-    w = '!'#(255, 255, 255) # White
-    x = ' '#(0, 0, 0) # Black
+    g = (0, 255, 0) # Green
+    r = (255, 0, 0) # Red
+    y = (255, 255, 0) # Yellow
+    b = (0, 0, 255) # Blue
+    w = (255, 255, 255) # White
+    x = (0, 0, 0) # Black
 
     def success_pixels(self):
         x = Display.x
@@ -72,51 +73,36 @@ class Display(Thread):
 
     def blink(self, value):
         if value:
-            Display.g = '*'#(50, 255, 50) # Green
-            Display.r = '*'#(255, 50, 50) # Red
-            Display.y = '*'#(255, 255, 50) # Yellow
+            Display.g = (50, 255, 50) # Green
+            Display.r = (255, 50, 50) # Red
+            Display.y = (255, 255, 50) # Yellow
         else:
-            Display.g = '#'#(0, 255, 0) # Green
-            Display.r = '#'#(255, 0, 0) # Red
-            Display.y = '#'#(255, 255, 0) # Yellow
+            Display.g = (0, 255, 0) # Green
+            Display.r = (255, 0, 0) # Red
+            Display.y = (255, 255, 0) # Yellow
 
     def run(self):
         blinker = self.blink_generator()
-        while boot_up:
-            # TESTING
-            sys.stdout.write('\033[2J\033[H') # clear screen
-            sys.stdout.write('booting')
-            sys.stdout.flush()
-
-            # PRODUCTION
-            # sense.set_pixel(randint(0, 7), randint(0, 7), randint(0, 255), randint(0, 255), randint(0, 255))
-            sleep(0.02)
-
         while True:
-            self.blink(next(blinker))
-            pixels = self.success_pixels()
-            if state == 'UNSTABLE':
-                pixels = self.warning_pixels()
-            elif state == 'FAILURE':
-                pixels = self.error_pixels()
-            
-            # TESTING
-            sys.stdout.write('\033[2J\033[H') # clear screen
-            pixels = list(''.join(l + '\n' * (n % 8 == 7) for n, l in enumerate(pixels)))
-            sys.stdout.write(''.join(pixels))
-            sys.stdout.flush()
-
-            # PRODUCTION
-            # sense.set_pixels(pixels)
-
-            sleep(0.75)
+            if boot_up:
+                sense.set_pixel(randint(0, 7), randint(0, 7), randint(0, 255), randint(0, 255), randint(0,255))
+                sleep(0.2)
+            else:
+                self.blink(next(blinker))
+                pixels = self.success_pixels()
+                if state == 'UNSTABLE':
+                    pixels = self.warning_pixels()
+                elif state == 'FAILURE':
+                    pixels = self.error_pixels()
+                sense.set_pixels(pixels)
+                sleep(0.75)
 
 def update():
     global boot_up
     global building
     global state
     try:
-        contents = urlopen("http://localhost:8887/server.json").read()
+        contents = urlopen("http://192.168.43.159:8887/server.json").read().decode("utf-8")
         json_object = json.loads(contents)
         boot_up = False
 
@@ -131,7 +117,7 @@ def update():
         state = temp_state
         building = temp_building
     except URLError:
-        pass
+        boot_up = True
 
 def main():
     update()

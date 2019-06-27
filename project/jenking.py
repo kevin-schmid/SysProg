@@ -7,22 +7,41 @@ from sense_hat import SenseHat
 from urllib.error import URLError
 from urllib.request import urlopen
 
+STATE_OK = 'SUCCESS'
+STATE_WARN = 'UNSTABLE'
+STATE_ERR = 'FAILURE'
+
 boot_up = True
 building = False
 state = 'SUCCESS'
 sense = SenseHat()
 
 class Display(Thread):
-    g = (0, 255, 0) # Green
-    r = (255, 0, 0) # Red
-    y = (255, 255, 0) # Yellow
-    b = (0, 0, 255) # Blue
-    w = (255, 255, 255) # White
-    x = (0, 0, 0) # Black
+    def __init__(self):
+      self._blink = False
+      self.b = (0, 0, 255) # Blue
+      self.w = (255, 255, 255) # White
+      self.x = (0, 0, 0) # Black
 
-    def success_pixels(self):
-        x = Display.x
-        g = Display.g
+    @property
+    def blink(self):
+      return self._blink
+
+    @property
+    def r(self):
+      return (255, 50, 50) if self._blink else (255, 0, 0)
+
+    @property
+    def g(self):
+      return (50, 255, 50) if self._blink else (0, 255, 0)
+
+    @property
+    def y(self):
+      return (255, 255, 50) if self._blink else (255, 255, 0)
+
+    def __success_pixels(self):
+        x = self.x
+        g = self.g
         return [
             x, x, x, x, x, x, x, x,
             x, g, g, x, x, g, g, x,
@@ -34,9 +53,9 @@ class Display(Thread):
             x, x, g, g, g, g, x, x
         ]
 
-    def warning_pixels(self):
-        x = Display.x
-        y = Display.y
+    def __warning_pixels(self):
+        x = self.x
+        y = self.y
         return [
             y, y, y, x, x, y, y, y,
             y, y, y, x, x, y, y, y,
@@ -48,10 +67,10 @@ class Display(Thread):
             x, x, x, x, x, x, x, x
         ]
 
-    def error_pixels(self):
-        x = Display.x
-        r = Display.r
-        b = Display.b
+    def __error_pixels(self):
+        x = self.x
+        r = self.r
+        b = self.b
         return [
             x, x, x, x, x, x, x, x,
             r, r, r, x, x, r, r, r,
@@ -63,7 +82,7 @@ class Display(Thread):
             x, r, x, x, x, x, r, x
         ]
 
-    def blink_generator(self):
+    def __blink_generator(self):
         while True:
             if building:
                 yield True
@@ -71,29 +90,21 @@ class Display(Thread):
             else:
                 yield False
 
-    def blink(self, value):
-        if value:
-            Display.g = (50, 255, 50) # Green
-            Display.r = (255, 50, 50) # Red
-            Display.y = (255, 255, 50) # Yellow
-        else:
-            Display.g = (0, 255, 0) # Green
-            Display.r = (255, 0, 0) # Red
-            Display.y = (255, 255, 0) # Yellow
-
     def run(self):
-        blinker = self.blink_generator()
+        blinker = self.__blink_generator()
         while True:
             if boot_up:
                 sense.set_pixel(randint(0, 7), randint(0, 7), randint(0, 255), randint(0, 255), randint(0,255))
                 sleep(0.2)
+                sense.set_pixel(randint(0, 7), randint(0, 7), 0, 0, 0)
+                sleep(0.2)
             else:
-                self.blink(next(blinker))
-                pixels = self.success_pixels()
-                if state == 'UNSTABLE':
-                    pixels = self.warning_pixels()
-                elif state == 'FAILURE':
-                    pixels = self.error_pixels()
+                self._blink = next(blinker)
+                pixels = self.__success_pixels()
+                if state == STATE_WARN:
+                    pixels = self.__warning_pixels()
+                elif state == STATE_ERR:
+                    pixels = self.__error_pixels()
                 sense.set_pixels(pixels)
                 sleep(0.75)
 
@@ -106,14 +117,14 @@ def update():
         json_object = json.loads(contents)
         boot_up = False
 
-        temp_state = 'SUCCESS'
+        temp_state = STATE_OK
         temp_building = False
         for job in json_object['jobs']:
             temp_building = temp_building or (job['lastBuild']['building'])
-            if job['lastBuild']['result'] == 'FAILURE':
-                temp_state = 'FAILURE'
-            if job['lastBuild']['result'] == 'UNSTABLE' and temp_state == 'SUCCESS':
-                temp_state = 'UNSTABLE'
+            if job['lastBuild']['result'] == STATE_ERR:
+                temp_state = STATE_ERR
+            if job['lastBuild']['result'] == STATE_WARN and temp_state == STATE_OK:
+                temp_state = STATE_WARN
         state = temp_state
         building = temp_building
     except URLError:
